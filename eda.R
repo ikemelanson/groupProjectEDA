@@ -135,13 +135,51 @@ df %>%
 
 categoricals <- c('playlist_genre', 'playlist_subgenre', 'key', 'mode')
 
-# df %>%
-#   select(all_of(c(dependent_variable, categoricals))) %>% 
-#   mutate(across(everything(), as.character)) %>% 
-#   pivot_longer(everything()) %>% 
-#   group_by(across(everything())) %>%
-#   summarise(n = n()) %>% 
-#   pivot_wider(names_from = name,values_from=N,values_fill=0)
+# select(all_of(c(dependent_variable, important_variables))) %>% 
+#   pivot_longer(important_variables) %>% 
+
+df %>%
+  select(all_of(c(dependent_variable, categoricals))) %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(categoricals) %>% 
+  group_by(name) %>% 
+  ggplot(aes(x=name)) +
+  geom_bar() +
+  facet_wrap(~name, nrow = 3, scales = 'free_y')
+
+# average track popularity by subgenre
+df %>% 
+  select(playlist_subgenre, track_popularity) %>% 
+  group_by(playlist_subgenre) %>% 
+  summarise(avg_popularity = mean(track_popularity)) %>% 
+  ggplot(aes(x = playlist_subgenre, y=avg_popularity)) +
+  geom_col() +
+  theme_bw()
+
+df %>% 
+  select(playlist_genre, track_popularity) %>% 
+  group_by(playlist_genre) %>% 
+  summarise(avg_popularity = mean(track_popularity)) %>% 
+  ggplot(aes(x = playlist_genre, y=avg_popularity)) +
+  geom_col() +
+  theme_bw()
+
+df %>% 
+  select(key, track_popularity) %>% 
+  group_by(key) %>% 
+  summarise(avg_popularity = mean(track_popularity)) %>% 
+  ggplot(aes(x = key, y=avg_popularity)) +
+  geom_col() +
+  theme_bw()
+  
+df %>% 
+  select(mode, track_popularity) %>% 
+  group_by(mode) %>% 
+  summarise(avg_popularity = mean(track_popularity)) %>% 
+  ggplot(aes(x = mode, y=avg_popularity)) +
+  geom_col() +
+  theme_bw()
+  
 
 
   
