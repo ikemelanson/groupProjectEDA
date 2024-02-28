@@ -113,6 +113,10 @@ duration_plot <- df %>%
   ggplot(aes(x = duration_ms)) +
   geom_histogram(fill = "skyblue", color = "black")
 
+mode_plot <- df %>%
+  ggplot(aes(x = mode)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
 
 # find the number of unique playlist_genres, subgenres, names, and artists
 df %>% 
@@ -130,6 +134,22 @@ df %>%
 df %>% 
   group_by(track_artist) %>% 
   count(track_artist)
+
+# plot distributions in one chart for the odd ones
+numeric_cols <- c('loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'tempo')
+
+df %>% 
+  select(all_of(c(numeric_cols))) %>%
+  pivot_longer(
+    cols = everything()
+  ) %>% 
+  ggplot(aes(x=value, fill=name)) +
+  geom_density() +
+  facet_wrap(~name, nrow = 6, scales = 'free') +
+  theme_bw() +
+  labs(
+    title = 'Odd Distributions'
+  )
 
 
 
