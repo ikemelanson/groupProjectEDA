@@ -57,8 +57,79 @@ joined <- duplicates %>% left_join(spotify, by = 'track_id') %>% select(track_id
   # even though I’m asking for just a page or two of column summary, your team will likely need to look fairly carefully
   # at each of the columns in order to identify any lurking issues and know which columns to highlight, etc.)
 
+# get count of numeric variables
+num_numeric <- print(sapply(df, is.numeric))
 
 
+# determine the missingness of the dataset
+colSums(is.na(df))
+
+df %>% 
+  filter(is.na(track_name))
+
+
+# plot the distributions for each continuous variable
+danceability_plot <- df %>%
+  ggplot(aes(x = danceability)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+energy_plot <- df %>%
+  ggplot(aes(x = energy)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+key_plot <- df %>%
+  ggplot(aes(x = key)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+loudness_plot <- df %>%
+  ggplot(aes(x = loudness)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+speechiness_plot <- df %>%
+  ggplot(aes(x = speechiness)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+acousticness_plot <- df %>%
+  ggplot(aes(x = acousticness)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+instrumentalness_plot <- df %>%
+  ggplot(aes(x = instrumentalness)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+liveness_plot <- df %>%
+  ggplot(aes(x = liveness)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+valence_plot <- df %>%
+  ggplot(aes(x = valence)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+tempo_plot <- df %>%
+  ggplot(aes(x = tempo)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+duration_plot <- df %>%
+  ggplot(aes(x = duration_ms)) +
+  geom_histogram(fill = "skyblue", color = "black")
+
+
+# find the number of unique playlist_genres, subgenres, names, and artists
+df %>% 
+  group_by(playlist_genre) %>% 
+  count(playlist_genre)
+
+df %>% 
+  group_by(playlist_subgenre) %>% 
+  count(playlist_subgenre)
+
+df %>% 
+  group_by(playlist_name) %>% 
+  count(playlist_name)
+
+df %>% 
+  group_by(track_artist) %>% 
+  count(track_artist)
 
 
 
