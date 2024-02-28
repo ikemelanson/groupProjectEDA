@@ -13,16 +13,17 @@ df <- read_csv("https://www.dropbox.com/scl/fi/2bbujng7y0dxpj8blb4ej/19_train.cs
   # model to predict. Look at the distribution and anything else that seems relevant, focusing 
   # especially on anything that you’ll likely need to account for as you build your model(s). 
   # Include one or more visualizations to illustrate the most important takeaway(s).
-library(tidyverse)
 
-# Set your own script to work in the right local directory:
+# Grab summary stats
 stats <- summary(spotify$track_popularity)
+
+# Grab standard deviation
 standard_deviation <- spotify %>% 
   summarize(
     standard_deviation = sd(track_popularity)
   )
 
-
+# Create histogram to show distribution
 histogram <- spotify %>%
   ggplot(aes(x = track_popularity)) +
   geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
@@ -30,7 +31,7 @@ histogram <- spotify %>%
        x = "Track Popularity",
        y = "Frequency")
 
-
+# Create density to show distribution
 density <- spotify %>%
   ggplot(aes(x = track_popularity)) +
   geom_density(fill = "orange", color = "black") +
@@ -38,13 +39,14 @@ density <- spotify %>%
        x = "Track Popularity",
        y = "Density")
 
+# Grab any duplicate track ids to try and explain the spike near 0-10 on track popularity
 duplicates <- spotify %>% 
   group_by(track_id) %>% 
   summarize(count = n()) %>% 
   filter(count > 1) %>% 
   arrange(desc(count))
 
-# To check for the track popularity of the duplicates
+# To check for the track popularity of the duplicates, which was not overwhelmingly values of 0-10, so this does not explain the peculiar spike
 joined <- duplicates %>% left_join(spotify, by = 'track_id') %>% select(track_id, count, track_popularity)
 
 # -------------------------------------------------------------------------------------------------------
