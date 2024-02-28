@@ -13,9 +13,39 @@ df <- read_csv("https://www.dropbox.com/scl/fi/2bbujng7y0dxpj8blb4ej/19_train.cs
   # model to predict. Look at the distribution and anything else that seems relevant, focusing 
   # especially on anything that you’ll likely need to account for as you build your model(s). 
   # Include one or more visualizations to illustrate the most important takeaway(s).
+library(tidyverse)
+
+# Set your own script to work in the right local directory:
+stats <- summary(spotify$track_popularity)
+standard_deviation <- spotify %>% 
+  summarize(
+    standard_deviation = sd(track_popularity)
+  )
 
 
+histogram <- spotify %>%
+  ggplot(aes(x = track_popularity)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Track Popularity",
+       x = "Track Popularity",
+       y = "Frequency")
 
+
+density <- spotify %>%
+  ggplot(aes(x = track_popularity)) +
+  geom_density(fill = "orange", color = "black") +
+  labs(title = "Density Plot of Track Popularity",
+       x = "Track Popularity",
+       y = "Density")
+
+duplicates <- spotify %>% 
+  group_by(track_id) %>% 
+  summarize(count = n()) %>% 
+  filter(count > 1) %>% 
+  arrange(desc(count))
+
+# To check for the track popularity of the duplicates
+joined <- duplicates %>% left_join(spotify, by = 'track_id') %>% select(track_id, count, track_popularity)
 
 # -------------------------------------------------------------------------------------------------------
 # B. (4 points) Summarize the characteristics of the remaining variables in the dataset at a high level. 
