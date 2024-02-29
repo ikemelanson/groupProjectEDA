@@ -47,33 +47,6 @@ df <- read_csv("https://www.dropbox.com/scl/fi/2bbujng7y0dxpj8blb4ej/19_train.cs
 numeric_cols <- c('danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms')
 dependent_variable <- 'track_popularity'
 
-# lets start by taking a look at the mean, median, min, max, and std for each of our numeric columns
-df %>% 
-  select(all_of(numeric_cols)) %>%
-  summary()
-# Wow, looks like instrumentalness is potentially extremly skewed, we'll take a deeper look at that later.
-# It also looks like we are dealing with different scales for a lot of these variables.
-# A lot of them are 0-1 but loudness, tempo, and duration appear to be on a different scale.
-# we will potentially need to scale those varialbes to use the same scale as the other variables.
-
-# lets take a look at some density plots for our numeric features. This will give us a better idea
-# as to which are skewed, and other potential problems
-
-df %>% 
-  select(all_of(c(numeric_cols))) %>%
-  pivot_longer(
-    cols = everything()
-  ) %>% 
-  ggplot(aes(x=value, fill=name)) +
-  geom_density() +
-  facet_wrap(~name, nrow = 6, scales = 'free') +
-  theme_bw()
-
-# just like we thought, instrumentalness is so extremely skewed, that its hard to tell what is even happening.
-# we can take a deeper look at that in a bit. duration, valence, and temp (kind of) have nice and normal distributions.
-# looks like acousticness, liveness and speechiness are positivly skewed, and dancebility, energy, and loudness 
-# are negativly skewed. We can look more into some potential transformations on these columns to make them more normal.
-
 # lets look at a correlation matrix for numeric columns with our dependent variable
 df %>% select(all_of(c(dependent_variable, numeric_cols))) %>% cor()
 # looks like our most correlated features are 'instrumentalness' -0.147904235, 'duration_ms' -0.143246007, and 'energy' -0.106449655
@@ -96,6 +69,7 @@ df %>%
   ggplot(aes(x = track_popularity, y = value, color = name)) +
   geom_point(alpha=.1) +
   facet_wrap(~name, nrow = 3, scales = 'free_y') +
+  ggtitle("Track Popularity vs Duration, Energy, and Instrumentalness") +
   theme_bw()
   
 # Obviosly the correlation scores were not very high, but these plots show just how low the correlation is.
@@ -106,23 +80,12 @@ df %>%
 df %>% 
   select(loudness, energy) %>% 
   ggplot(aes(x=energy, y=loudness)) +
-  geom_point(color='blue', alpha=.1)
+  geom_point(color='blue', alpha=.1) +
+  ggtitle("Energy and Loudness Correlation") +
+  theme_bw()
 # very nicely correlated indeed, later in the model building process, we can take a look at potentially
 # removing one of these columns. This shows that in general, high energy songs are also loud, which makes
 # a lot of sense!
-
-# now lets go back a little bit and just investigate our instrumentalness column a little bit.
-df %>% 
-  select(instrumentalness) %>%
-  ggplot(aes(x = instrumentalness))+
-  geom_boxplot()
-# useless
-
-# lets try a bar chart
-df %>% 
-  select(instrumentalness) %>% 
-  ggplot(aes(x=instrumentalness)) +
-  geom_histogram(bins= 50)
 
 
   # - For categorical variables, this will involve looking at the pattern of the dependent
@@ -131,59 +94,67 @@ df %>%
   # variable appears “different” (in terms of rate, frequency, average, etc.) at different levels of that 
   # category. Summarize anything you find particularly interesting or relevant using an appropriate visualization.
 
-# playlist_genre, playlist_subgenre, key, mode, 
 
 categoricals <- c('playlist_genre', 'playlist_subgenre', 'key', 'mode')
 
-# select(all_of(c(dependent_variable, important_variables))) %>% 
-#   pivot_longer(important_variables) %>% 
-
-df %>%
-  select(all_of(c(dependent_variable, categoricals))) %>%
-  mutate(across(everything(), as.character)) %>%
-  pivot_longer(categoricals) %>% 
-  group_by(name) %>% 
-  ggplot(aes(x=name)) +
-  geom_bar() +
-  facet_wrap(~name, nrow = 3, scales = 'free_y')
-
-# average track popularity by subgenre
-df %>% 
-  select(playlist_subgenre, track_popularity) %>% 
-  group_by(playlist_subgenre) %>% 
-  summarise(avg_popularity = mean(track_popularity)) %>% 
-  ggplot(aes(x = playlist_subgenre, y=avg_popularity)) +
-  geom_col() +
-  theme_bw()
+# Let's take a look at our categorical variables and how they relate to track_popularity. We will do this by
+# comparing the average track_popularity for each category.
 
 df %>% 
   select(playlist_genre, track_popularity) %>% 
   group_by(playlist_genre) %>% 
-  summarise(avg_popularity = mean(track_popularity)) %>% 
+  summarise(avg_popularity = mean(track_popularity)) %>% arrange(desc(avg_popularity))
   ggplot(aes(x = playlist_genre, y=avg_popularity)) +
-  geom_col() +
+  geom_col(fill='skyblue', color='black') +
+  ggtitle("Average Popularity Score for each Playlist Genre") +
   theme_bw()
+  
+  # Looks like there's not really a strong correlation here. The Pop category scored the highest, which is no
+  # surprise. The latin was right behind, which was a little bit surprising. These seem to be very broad categories
+  # however, so they each represent a lot of different subgenres. Let's dig into the possible subgenres.
+  
+df %>% 
+  select(playlist_subgenre, track_popularity) %>% 
+  group_by(playlist_subgenre) %>% 
+  summarise(avg_popularity = mean(track_popularity)) %>% arrange(desc(avg_popularity))
+  ggplot(aes(x = playlist_subgenre, y=avg_popularity)) +
+  geom_col(fill='skyblue', color='black') +
+  ggtitle("Average Popularity Score for each Playlist Subgenre") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+  # Looks like post-teen pop took the cake on this one, followed by permanent wave (whatever that is) and hip hop. 
+  # Post-teen pop and hip hop make a lot of sense, those are very popular genres. Permanent wave includes artists 
+  # like Post Malone, Coldplay, and The Red Hot Chili Peppers, all of whom make very popular music.
+  
+  # We might need to simplify down some of these subgenres. Maybe rate them on popularity and have a 
+  # subgere_popularity column? This many categories in a column can be problematic when we try to turn them into dummy variables. 
+  
+  # Let's see if the music key of the song makes a difference. 
 
 df %>% 
   select(key, track_popularity) %>% 
   group_by(key) %>% 
   summarise(avg_popularity = mean(track_popularity)) %>% 
   ggplot(aes(x = key, y=avg_popularity)) +
-  geom_col() +
+  geom_col(fill='skyblue', color='black') +
+  ggtitle("Average Popularity Score for each Key") +
   theme_bw()
   
+# Looks like 8 (key of G#/A♭) is the winner, but not in any significant way.
+# Depending on the model we use, we can certainly drop this column
+              
+# Let's look at the Mode (a major key is 1, minor key is 0).
+
 df %>% 
   select(mode, track_popularity) %>% 
   group_by(mode) %>% 
   summarise(avg_popularity = mean(track_popularity)) %>% 
   ggplot(aes(x = mode, y=avg_popularity)) +
-  geom_col() +
+  geom_col(fill='skyblue', color='black') +
+  ggtitle("Average Popularity Score by Mode") +
   theme_bw()
-  
 
-
-  
-
-
+# Pretty much no difference, songs in a major key are the tiniest bit more popular. Probably drop this column in a lot of our models. 
 
 
